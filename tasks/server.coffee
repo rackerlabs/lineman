@@ -34,6 +34,7 @@ module.exports = (grunt) ->
     userConfig = fileUtils.loadConfigurationFile("server")
     pushStateEnabled = grunt.config.get("server.pushState")
     relativeUrlRoot = grunt.config.get("server.relativeUrlRoot")
+    customUrlPath = grunt.config.get("server.customUrlPath")
     @requiresConfig("server.apiProxy.prefix") if pushStateEnabled and apiProxyEnabled
 
     app = express()
@@ -69,11 +70,20 @@ module.exports = (grunt) ->
     applyRelativeUrlRoot(app, relativeUrlRoot).listen webPort, ->
       resetRoutesOnServerConfigChange(app)
 
+    applyCustomUrlPath(app, customUrlPath).listen webPort, ->
+      resetRoutesOnServerConfigChange(app)
+
   applyRelativeUrlRoot = (app, relativeUrlRoot) ->
     return app unless relativeUrlRoot?
     grunt.log.writeln("Mounting application at path '#{relativeUrlRoot}'.")
     _(express()).tap (otherApp) ->
       otherApp.use(relativeUrlRoot, app)
+
+  applyCustomUrlPath = (app, customUrlPath) ->
+    return app unless customUrlPath?
+    grunt.log.writeln("Mounting application at path '#{customUrlPath}'.")
+    _(express()).tap (otherApp) ->
+      otherApp.use(customUrlPath, app)
 
   configureLiveReloadMiddleware = (app) ->
     return unless livereload = grunt.config.get("livereload")
