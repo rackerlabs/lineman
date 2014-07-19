@@ -45,7 +45,10 @@ module.exports = (grunt) ->
     app.configure ->
       app.use(express.compress())
       configureLiveReloadMiddleware(app)
-      app.use(express.static("#{process.cwd()}/#{webRoot}"))
+      if customUrlPath?
+        app.use(customUrlPath, express.static("#{process.cwd()}/#{webRoot}"))
+      else
+        app.use(express.static("#{process.cwd()}/#{webRoot}"))
       mountUserStaticRoutes(app, webRoot, staticRoutes)
 
       userConfig.drawRoutes?(app)
@@ -70,20 +73,11 @@ module.exports = (grunt) ->
     applyRelativeUrlRoot(app, relativeUrlRoot).listen webPort, ->
       resetRoutesOnServerConfigChange(app)
 
-    applyCustomUrlPath(app, customUrlPath).listen webPort, ->
-      resetRoutesOnServerConfigChange(app)
-
   applyRelativeUrlRoot = (app, relativeUrlRoot) ->
     return app unless relativeUrlRoot?
     grunt.log.writeln("Mounting application at path '#{relativeUrlRoot}'.")
     _(express()).tap (otherApp) ->
       otherApp.use(relativeUrlRoot, app)
-
-  applyCustomUrlPath = (app, customUrlPath) ->
-    return app unless customUrlPath?
-    grunt.log.writeln("Mounting application at path '#{customUrlPath}'.")
-    _(express()).tap (otherApp) ->
-      otherApp.use(customUrlPath, app)
 
   configureLiveReloadMiddleware = (app) ->
     return unless livereload = grunt.config.get("livereload")
